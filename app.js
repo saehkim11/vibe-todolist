@@ -109,6 +109,14 @@ const notificationList = document.querySelector("#notificationList");
 const openMemoButton = document.querySelector("#openMemoButton");
 const memoDialog = document.querySelector("#memoDialog");
 const closeMemoButton = document.querySelector("#closeMemoButton");
+const newMemoButton=document.querySelector("#newMemoButton"), memoRoomList=document.querySelector("#memoRoomList"), memoStatus=document.querySelector("#memoStatus"), memoEmpty=document.querySelector("#memoEmpty"), memoConversation=document.querySelector("#memoConversation"), memoRoomTitle=document.querySelector("#memoRoomTitle"), memoMessageList=document.querySelector("#memoMessageList"), memoMessageForm=document.querySelector("#memoMessageForm"), memoMessageInput=document.querySelector("#memoMessageInput"), memoCreateDialog=document.querySelector("#memoCreateDialog"), memoCreateForm=document.querySelector("#memoCreateForm"), closeMemoCreateButton=document.querySelector("#closeMemoCreateButton"), memoTitleInput=document.querySelector("#memoTitleInput"), memoMemberChoices=document.querySelector("#memoMemberChoices");
+let selectedMemoRoomId=null;
+
+async function loadMemoRooms(){const {data,error}=await sb.from("memo_participants").select("room_id,memo_rooms(id,title,created_at)").eq("user_id",currentSession.user.id); if(error){memoStatus.textContent="메모 기능을 사용하려면 memo_migration.sql을 실행해 주세요.";return;} memoRoomList.replaceChildren(); for(const row of data||[]){const b=document.createElement("button");b.className="memo-room-button";b.textContent=row.memo_rooms.title;b.onclick=()=>loadMemoMessages(row.room_id,row.memo_rooms.title);memoRoomList.append(b);}}
+async function loadMemoMessages(roomId,title){selectedMemoRoomId=roomId;memoEmpty.hidden=true;memoConversation.hidden=false;memoRoomTitle.textContent=title;const {data}=await sb.from("memo_messages").select("content,created_at,profiles(display_name)").eq("room_id",roomId).order("created_at");memoMessageList.replaceChildren();for(const m of data||[]){const p=document.createElement("p");p.textContent=`${m.profiles?.display_name||"사용자"}: ${m.content}`;memoMessageList.append(p);}}
+function openMemoCreate(){memoMemberChoices.replaceChildren();for(const m of teamMembers){if(m.id===currentSession.user.id)continue;const l=document.createElement("label");const c=document.createElement("input");c.type="checkbox";c.value=m.id;l.append(c,` ${m.display_name}`);memoMemberChoices.append(l);}memoCreateDialog.showModal();}
+async function createMemo(e){e.preventDefault();const title=memoTitleInput.value.trim(), ids=[currentSession.user.id,...[...memoMemberChoices.querySelectorAll("input:checked")].map(x=>x.value)];if(!title||ids.length<2)return;const {data:r,error}=await sb.from("memo_rooms").insert({title}).select("id").single();if(error){memoStatus.textContent=error.message;return;}await sb.from("memo_participants").insert(ids.map(user_id=>({room_id:r.id,user_id})));memoCreateDialog.close();await loadMemoRooms();}
+async function sendMemo(e){e.preventDefault();const content=memoMessageInput.value.trim();if(!content||!selectedMemoRoomId)return;await sb.from("memo_messages").insert({room_id:selectedMemoRoomId,content});memoMessageInput.value="";const title=memoRoomTitle.textContent;await loadMemoMessages(selectedMemoRoomId,title);}
 
 let authRenderNumber = 0;
 let taskRequestNumber = 0;
@@ -1952,6 +1960,7 @@ closeNotificationButton.addEventListener("click", () => notificationDialog.close
 markAllNotificationsButton.addEventListener("click", () => void markAllNotificationsRead());
 openMemoButton.addEventListener("click", () => memoDialog.showModal());
 closeMemoButton.addEventListener("click", () => memoDialog.close());
+openMemoButton.addEventListener("click",()=>void loadMemoRooms());newMemoButton.addEventListener("click",openMemoCreate);closeMemoCreateButton.addEventListener("click",()=>memoCreateDialog.close());memoCreateForm.addEventListener("submit",createMemo);memoMessageForm.addEventListener("submit",sendMemo);
 themeToggleButton.addEventListener("click", toggleTheme);
 
 applyTheme(document.documentElement.dataset.theme, false);

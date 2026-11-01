@@ -315,7 +315,8 @@
     </section>
   </main>
 
-  <dialog id="memoDialog" class="task-dialog" aria-labelledby="memoDialogTitle"><div class="dialog-heading"><div><p class="section-label">GROUP MEMO</p><h2 id="memoDialogTitle">단체 메모</h2></div><button id="closeMemoButton" class="icon-button" type="button">×</button></div><p class="task-list-status">참여자를 선택해 대화방을 만드는 기능을 다음 DB 단계에서 연결합니다.</p></dialog>
+  <dialog id="memoDialog" class="task-dialog" aria-labelledby="memoDialogTitle"><div class="dialog-heading"><div><p class="section-label">GROUP MEMO</p><h2 id="memoDialogTitle">단체 메모</h2></div><button id="closeMemoButton" class="icon-button" type="button">×</button></div><div class="memo-layout"><aside><button id="newMemoButton" class="primary-button" type="button">새 단체 메모</button><p id="memoStatus" class="task-list-status"></p><div id="memoRoomList" class="memo-room-list"></div></aside><section><div id="memoEmpty" class="memo-empty">왼쪽에서 메모를 선택하거나 새 단체 메모를 만들어 보세요.</div><div id="memoConversation" hidden><h3 id="memoRoomTitle"></h3><div id="memoMessageList" class="memo-message-list"></div><form id="memoMessageForm"><textarea id="memoMessageInput" maxlength="2000" placeholder="메모를 입력하세요" required></textarea><button class="primary-button" type="submit">보내기</button></form></div></section></div></dialog>
+  <dialog id="memoCreateDialog" class="task-dialog"><form id="memoCreateForm" class="task-editor-form"><div class="dialog-heading"><h2>새 단체 메모</h2><button id="closeMemoCreateButton" class="icon-button" type="button">×</button></div><input id="memoTitleInput" placeholder="대화 제목" maxlength="100" required><div id="memoMemberChoices" class="memo-member-choices"></div><button class="primary-button" type="submit">대화방 만들기</button></form></dialog>
   <dialog id="organizationDetailDialog" class="task-dialog organization-detail-dialog" aria-labelledby="organizationDetailTitle">
     <div class="dialog-heading">
       <div>

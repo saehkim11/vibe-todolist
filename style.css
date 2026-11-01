@@ -238,11 +238,13 @@ button {
   gap: 10px;
   align-items: center;
 }
+.workspace-actions > .notification-button,.workspace-actions > .compact-button{align-self:flex-end}
 .workspace-view-tabs { margin-top: 14px; }
 .memo-preview { display: grid; grid-template-columns: 1fr auto; gap: 4px 18px; width: min(50%, 580px); min-width: 360px; min-height: 104px; padding: 16px 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-muted); }
 .memo-preview .section-label { margin: 0; font-size: .62rem; }
 .memo-preview.has-memo{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--surface-muted));box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 30%,transparent)}
 .memo-member-choice{padding:7px;border:1px solid var(--line);border-radius:7px;background:var(--surface-muted);font-size:.8rem}
+.memo-member-choice:nth-child(n+2){border-left-color:var(--accent)}
 .memo-preview strong { font-size: .9rem; }
 .memo-preview p { grid-column: 1; margin: 0; color: var(--text-muted); font-size: .78rem; }
 .memo-preview .text-action-button { grid-column: 2; grid-row: 1 / span 2; }

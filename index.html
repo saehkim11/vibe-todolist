@@ -5,6 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="팀 업무를 배정하고 진행 상태를 확인하는 Todo List입니다.">
   <title>팀 Todo List</title>
+  <script>
+    (() => {
+      try {
+        const savedTheme = localStorage.getItem("todo-theme");
+        document.documentElement.dataset.theme = savedTheme === "light" ? "light" : "dark";
+      } catch {
+        document.documentElement.dataset.theme = "dark";
+      }
+    })();
+  </script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -42,6 +52,13 @@
     </section>
 
     <section class="account-panel" aria-labelledby="accountTitle">
+      <button
+        id="themeToggleButton"
+        class="theme-toggle-button"
+        type="button"
+        aria-label="라이트 모드로 변경"
+        title="라이트 모드로 변경"
+      >☀</button>
       <div id="loggedOutView">
         <div class="panel-heading">
           <p class="section-label">계정</p>

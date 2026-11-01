@@ -1,18 +1,68 @@
 :root {
+  color-scheme: dark;
+  --background: #141513;
+  --surface: #20211f;
+  --surface-muted: #2a2b28;
+  --surface-soft: rgba(32, 33, 31, 0.82);
+  --text: #f2f2ed;
+  --text-muted: #a9aba3;
+  --line: #3b3d38;
+  --line-hover: #5a5d55;
+  --accent: #73c5ac;
+  --accent-hover: #58ab92;
+  --button-text: #10261f;
+  --warning-bg: #44391e;
+  --warning-text: #f1d482;
+  --info-bg: #203b33;
+  --info-text: #b6e5d6;
+  --danger: #ff8f87;
+  --success: #77d5a4;
+  --status-before-bg: #363734;
+  --status-before-text: #d2d3cc;
+  --status-progress-bg: #4c3d18;
+  --status-progress-text: #f4d47c;
+  --status-completed-bg: #1f4939;
+  --status-completed-text: #a9e2c9;
+  --leader-start: #4b3914;
+  --leader-end: #34290f;
+  --leader-border: #c8952c;
+  --leader-inner: rgba(24, 22, 15, 0.72);
+  --leader-text: #ffd875;
+  --unread-border: #579b86;
+  --shadow: 0 14px 38px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="light"] {
+  color-scheme: light;
   --background: #f7f7f5;
   --surface: #ffffff;
   --surface-muted: #f3f3f1;
+  --surface-soft: rgba(255, 255, 255, 0.64);
   --text: #2f2f2f;
   --text-muted: #6f6f6b;
   --line: #e3e3df;
+  --line-hover: #c8c8c2;
   --accent: #2f6f5e;
   --accent-hover: #24594b;
+  --button-text: #ffffff;
   --warning-bg: #fff6dd;
   --warning-text: #745a00;
   --info-bg: #eef6f3;
   --info-text: #28594c;
   --danger: #b42318;
   --success: #247a50;
+  --status-before-bg: #efefed;
+  --status-before-text: #5f5f5b;
+  --status-progress-bg: #fff0cc;
+  --status-progress-text: #795700;
+  --status-completed-bg: #deefe7;
+  --status-completed-text: #236046;
+  --leader-start: #fff8da;
+  --leader-end: #ffe9a9;
+  --leader-border: #c99222;
+  --leader-inner: rgba(255, 255, 255, 0.8);
+  --leader-text: #765500;
+  --unread-border: #a9cfc2;
   --shadow: 0 12px 32px rgba(15, 23, 42, 0.07);
 }
 
@@ -90,7 +140,7 @@ button {
   padding: 18px 20px;
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.64);
+  background: var(--surface-soft);
 }
 
 .feature-number {
@@ -115,6 +165,7 @@ button {
 }
 
 .account-panel {
+  position: relative;
   padding: clamp(24px, 5vw, 42px);
   border: 1px solid var(--line);
   border-radius: 18px;
@@ -123,22 +174,45 @@ button {
 }
 
 .account-panel.is-leader-account {
-  border: 2px solid #c99222;
-  background: linear-gradient(145deg, #fff8da 0%, #ffe9a9 100%);
+  border: 2px solid var(--leader-border);
+  background: linear-gradient(145deg, var(--leader-start) 0%, var(--leader-end) 100%);
   box-shadow: 0 12px 30px rgba(125, 84, 0, 0.2);
 }
 
 .account-panel.is-leader-account .section-label {
-  color: #80600c;
+  color: var(--leader-text);
 }
 
 .account-panel.is-leader-account .profile-card > div {
-  border-color: #d5ae53;
-  background: rgba(255, 255, 255, 0.8);
+  border-color: var(--leader-border);
+  background: var(--leader-inner);
 }
 
 .account-panel.is-leader-account #currentUserRole {
-  color: #765500;
+  color: var(--leader-text);
+}
+
+.theme-toggle-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-muted);
+  color: var(--text);
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.theme-toggle-button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .workspace-panel {
@@ -308,7 +382,7 @@ button {
 }
 
 .task-card:hover {
-  border-color: #c8c8c2;
+  border-color: var(--line-hover);
   transform: translateY(-1px);
 }
 
@@ -334,18 +408,18 @@ button {
 }
 
 .status-start_before {
-  background: #efefed;
-  color: #5f5f5b;
+  background: var(--status-before-bg);
+  color: var(--status-before-text);
 }
 
 .status-in_progress {
-  background: #fff0cc;
-  color: #795700;
+  background: var(--status-progress-bg);
+  color: var(--status-progress-text);
 }
 
 .status-completed {
-  background: #deefe7;
-  color: #236046;
+  background: var(--status-completed-bg);
+  color: var(--status-completed-text);
 }
 
 .task-title,
@@ -449,6 +523,10 @@ button {
 .panel-heading h2,
 .panel-heading p {
   margin: 0;
+}
+
+.account-panel .panel-heading {
+  padding-right: 40px;
 }
 
 .panel-heading h2 {
@@ -807,7 +885,7 @@ button {
 }
 
 .notification-item.is-unread {
-  border-color: #a9cfc2;
+  border-color: var(--unread-border);
   background: var(--info-bg);
 }
 
@@ -838,7 +916,7 @@ button {
 .primary-button {
   border: 1px solid var(--accent);
   background: var(--accent);
-  color: #ffffff;
+  color: var(--button-text);
 }
 
 .primary-button:hover:not(:disabled) {

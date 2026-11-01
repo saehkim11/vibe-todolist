@@ -1,6 +1,7 @@
 const loggedOutView = document.querySelector("#loggedOutView");
 const loggedInView = document.querySelector("#loggedInView");
 const accountPanel = document.querySelector(".account-panel");
+const themeToggleButton = document.querySelector("#themeToggleButton");
 const loginTabButton = document.querySelector("#loginTabButton");
 const signupTabButton = document.querySelector("#signupTabButton");
 const loginPanel = document.querySelector("#loginPanel");
@@ -92,6 +93,33 @@ const taskStatusLabels = {
   in_progress: "진행 중",
   completed: "작업 완료"
 };
+
+function applyTheme(theme, shouldSave = true) {
+  const selectedTheme = theme === "light" ? "light" : "dark";
+  const isDark = selectedTheme === "dark";
+
+  document.documentElement.dataset.theme = selectedTheme;
+  themeToggleButton.textContent = isDark ? "☀" : "☾";
+  themeToggleButton.setAttribute(
+    "aria-label",
+    isDark ? "라이트 모드로 변경" : "다크 모드로 변경"
+  );
+  themeToggleButton.title = isDark ? "라이트 모드로 변경" : "다크 모드로 변경";
+  themeToggleButton.setAttribute("aria-pressed", String(!isDark));
+
+  if (shouldSave) {
+    try {
+      localStorage.setItem("todo-theme", selectedTheme);
+    } catch {
+      // 저장이 제한된 브라우저에서도 현재 화면의 테마 전환은 유지합니다.
+    }
+  }
+}
+
+function toggleTheme() {
+  const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  applyTheme(nextTheme);
+}
 
 function showMessage(message = "", type = "") {
   accountMessage.textContent = message;
@@ -1296,5 +1324,7 @@ cancelCommentEditButton.addEventListener("click", resetCommentForm);
 notificationButton.addEventListener("click", openNotificationDialog);
 closeNotificationButton.addEventListener("click", () => notificationDialog.close());
 markAllNotificationsButton.addEventListener("click", () => void markAllNotificationsRead());
+themeToggleButton.addEventListener("click", toggleTheme);
 
+applyTheme(document.documentElement.dataset.theme, false);
 void initializeAuth();

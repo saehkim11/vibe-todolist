@@ -233,27 +233,69 @@
         </div>
       </div>
 
-      <div class="task-toolbar" aria-label="업무 필터">
-        <div class="filter-group">
-          <label for="taskDateFilter">날짜</label>
-          <select id="taskDateFilter">
-            <option value="all">전체 날짜</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label for="taskStatusFilter">진행 상태</label>
-          <select id="taskStatusFilter">
-            <option value="all">전체 상태</option>
-            <option value="start_before">시작 전</option>
-            <option value="in_progress">진행 중</option>
-            <option value="completed">작업 완료</option>
-          </select>
-        </div>
-        <button id="refreshTasksButton" class="toolbar-button" type="button">새로고침</button>
+      <div class="workspace-mode-tabs" role="tablist" aria-label="업무 보기 선택">
+        <button id="dashboardViewButton" class="workspace-mode-button is-active" type="button" role="tab" aria-selected="true">대시보드</button>
+        <button id="listViewButton" class="workspace-mode-button" type="button" role="tab" aria-selected="false">업무 목록</button>
+        <button id="organizationViewButton" class="workspace-mode-button" type="button" role="tab" aria-selected="false">조직도</button>
       </div>
 
-      <p id="taskListStatus" class="task-list-status" role="status" aria-live="polite"></p>
-      <div id="taskGrid" class="task-grid" aria-label="업무 카드 목록"></div>
+      <section id="dashboardView" class="dashboard-view" aria-labelledby="dashboardTitle">
+        <div class="dashboard-heading">
+          <div>
+            <p class="section-label">TODAY AT A GLANCE</p>
+            <h3 id="dashboardTitle">업무 현황</h3>
+          </div>
+          <p>현재 팀 업무의 상태를 빠르게 확인합니다.</p>
+        </div>
+
+        <div class="metric-grid" aria-label="업무 요약">
+          <article class="metric-card"><span>내 업무</span><strong id="dashboardMyCount">0</strong><small>배정된 전체 업무</small></article>
+          <article class="metric-card"><span>진행 중</span><strong id="dashboardProgressCount">0</strong><small>내가 진행 중인 업무</small></article>
+          <article class="metric-card"><span>작업 완료</span><strong id="dashboardCompletedCount">0</strong><small>내 완료 업무</small></article>
+          <article class="metric-card"><span>팀 업무</span><strong id="dashboardTeamCount">0</strong><small>같은 팀 전체 업무</small></article>
+        </div>
+
+        <div class="status-board-heading">
+          <h3>상태별 업무 보드</h3>
+          <button id="dashboardGoToListButton" class="text-action-button" type="button">전체 업무 보기</button>
+        </div>
+        <div id="statusBoard" class="status-board" aria-label="상태별 업무 보드"></div>
+      </section>
+
+      <section id="organizationView" class="organization-view" aria-labelledby="organizationTitle" hidden>
+        <div class="dashboard-heading">
+          <div>
+            <p class="section-label">TEAM STRUCTURE</p>
+            <h3 id="organizationTitle">우리 팀 조직도</h3>
+          </div>
+          <p>팀장과 팀원의 현재 업무 현황을 확인합니다.</p>
+        </div>
+        <div id="organizationChart" class="organization-chart" aria-label="팀 조직도"></div>
+      </section>
+
+      <div id="taskListView">
+        <div class="task-toolbar" aria-label="업무 필터">
+          <div class="filter-group">
+            <label for="taskDateFilter">날짜</label>
+            <select id="taskDateFilter">
+              <option value="all">전체 날짜</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="taskStatusFilter">진행 상태</label>
+            <select id="taskStatusFilter">
+              <option value="all">전체 상태</option>
+              <option value="start_before">시작 전</option>
+              <option value="in_progress">진행 중</option>
+              <option value="completed">작업 완료</option>
+            </select>
+          </div>
+          <button id="refreshTasksButton" class="toolbar-button" type="button">새로고침</button>
+        </div>
+
+        <p id="taskListStatus" class="task-list-status" role="status" aria-live="polite"></p>
+        <div id="taskGrid" class="task-grid" aria-label="업무 카드 목록"></div>
+      </div>
     </section>
   </main>
 

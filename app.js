@@ -20,6 +20,19 @@ const currentUserRole = document.querySelector("#currentUserRole");
 const teamPendingNotice = document.querySelector("#teamPendingNotice");
 const workspaceView = document.querySelector("#workspaceView");
 const workspaceSummary = document.querySelector("#workspaceSummary");
+const dashboardViewButton = document.querySelector("#dashboardViewButton");
+const listViewButton = document.querySelector("#listViewButton");
+const organizationViewButton = document.querySelector("#organizationViewButton");
+const dashboardView = document.querySelector("#dashboardView");
+const organizationView = document.querySelector("#organizationView");
+const taskListView = document.querySelector("#taskListView");
+const dashboardMyCount = document.querySelector("#dashboardMyCount");
+const dashboardProgressCount = document.querySelector("#dashboardProgressCount");
+const dashboardCompletedCount = document.querySelector("#dashboardCompletedCount");
+const dashboardTeamCount = document.querySelector("#dashboardTeamCount");
+const dashboardGoToListButton = document.querySelector("#dashboardGoToListButton");
+const statusBoard = document.querySelector("#statusBoard");
+const organizationChart = document.querySelector("#organizationChart");
 const teamTasksButton = document.querySelector("#teamTasksButton");
 const myTasksButton = document.querySelector("#myTasksButton");
 const taskDateFilter = document.querySelector("#taskDateFilter");
@@ -80,7 +93,9 @@ let taskRequestNumber = 0;
 let currentSession = null;
 let currentProfile = null;
 let currentTaskView = "team";
+let currentWorkspaceMode = "dashboard";
 let loadedTasks = [];
+let dashboardTasks = [];
 let teamMembers = [];
 let selectedTaskId = null;
 let loadedComments = [];
@@ -225,6 +240,9 @@ function clearTaskList() {
   loadedNotifications = [];
   notificationList.replaceChildren();
   teamMembers = [];
+  dashboardTasks = [];
+  statusBoard.replaceChildren();
+  organizationChart.replaceChildren();
 }
 
 async function loadTeamMembers() {
@@ -245,6 +263,217 @@ async function loadTeamMembers() {
   }
 
   teamMembers = data || [];
+}
+
+function taskCountForMember(memberId, status = "") {
+  return dashboardTasks.filter((task) => (
+    task.assignee_id === memberId && (!status || task.status === status)
+  )).length;
+}
+
+function createDashboardTaskButton(task) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "board-task";
+  button.addEventListener("click", () => void openTaskDetail(task));
+
+  const title = document.createElement("strong");
+  title.textContent = task.title;
+
+  const meta = document.createElement("span");
+  meta.textContent = `${task.assignee?.display_name || "담당자"} · ${formatTaskDate(task.task_date)}`;
+
+  button.append(title, meta);
+  return button;
+}
+
+function renderDashboard() {
+  if (!currentSession?.user) {
+    return;
+  }
+
+  const myTasks = dashboardTasks.filter((task) => task.assignee_id === currentSession.user.id);
+  dashboardMyCount.textContent = String(myTasks.length);
+  dashboardProgressCount.textContent = String(myTasks.filter((task) => task.status === "in_progress").length);
+  dashboardCompletedCount.textContent = String(myTasks.filter((task) => task.status === "completed").length);
+  dashboardTeamCount.textContent = String(dashboardTasks.length);
+
+  const statusGroups = [
+    ["start_before", "시작 전"],
+    ["in_progress", "진행 중"],
+    ["completed", "작업 완료"]
+  ];
+  const fragment = document.createDocumentFragment();
+
+  for (const [status, label] of statusGroups) {
+    const tasks = dashboardTasks.filter((task) => task.status === status);
+    const column = document.createElement("section");
+    column.className = `status-column status-column-${status}`;
+
+    const heading = document.createElement("div");
+    heading.className = "status-column-heading";
+    const title = document.createElement("h4");
+    title.textContent = label;
+    const count = document.createElement("span");
+    count.textContent = String(tasks.length);
+    heading.append(title, count);
+    column.append(heading);
+
+    const visibleTasks = tasks.slice(0, 5);
+    if (visibleTasks.length === 0) {
+      const empty = document.createElement("p");
+      empty.className = "board-empty";
+      empty.textContent = "해당 업무가 없습니다.";
+      column.append(empty);
+    } else {
+      for (const task of visibleTasks) {
+        column.append(createDashboardTaskButton(task));
+      }
+    }
+
+    if (tasks.length > visibleTasks.length) {
+      const moreButton = document.createElement("button");
+      moreButton.type = "button";
+      moreButton.className = "board-more-button";
+      moreButton.textContent = `+ ${tasks.length - visibleTasks.length}개 더 보기`;
+      moreButton.addEventListener("click", () => {
+        selectWorkspaceMode("list");
+        taskStatusFilter.value = status;
+        renderFilteredTasks();
+      });
+      column.append(moreButton);
+    }
+
+    fragment.append(column);
+  }
+
+  statusBoard.replaceChildren(fragment);
+}
+
+function createOrganizationMemberCard(member, isLeader = false) {
+  const card = document.createElement("article");
+  card.className = isLeader ? "organization-member is-leader" : "organization-member";
+  if (member.id === currentSession?.user?.id) {
+    card.classList.add("is-current-user");
+  }
+
+  const role = document.createElement("span");
+  role.className = "organization-role";
+  role.textContent = isLeader ? "팀장" : "팀원";
+
+  const name = document.createElement("strong");
+  name.textContent = member.id === currentSession?.user?.id
+    ? `${member.display_name} (나)`
+    : member.display_name;
+
+  const summary = document.createElement("p");
+  const total = taskCountForMember(member.id);
+  const progressing = taskCountForMember(member.id, "in_progress");
+  const completed = taskCountForMember(member.id, "completed");
+  summary.textContent = `업무 ${total}개 · 진행 ${progressing} · 완료 ${completed}`;
+
+  card.append(role, name, summary);
+  return card;
+}
+
+function renderOrganization() {
+  organizationChart.replaceChildren();
+
+  if (teamMembers.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "organization-empty";
+    empty.textContent = "팀 정보를 불러오는 중입니다.";
+    organizationChart.append(empty);
+    return;
+  }
+
+  const leader = teamMembers.find((member) => member.is_leader);
+  const members = teamMembers.filter((member) => !member.is_leader);
+  const fragment = document.createDocumentFragment();
+
+  if (leader) {
+    const leaderWrap = document.createElement("div");
+    leaderWrap.className = "organization-leader-wrap";
+    leaderWrap.append(createOrganizationMemberCard(leader, true));
+    fragment.append(leaderWrap);
+  }
+
+  if (members.length > 0) {
+    const connector = document.createElement("div");
+    connector.className = "organization-connector";
+    connector.setAttribute("aria-hidden", "true");
+    fragment.append(connector);
+
+    const memberGrid = document.createElement("div");
+    memberGrid.className = "organization-member-grid";
+    for (const member of members) {
+      memberGrid.append(createOrganizationMemberCard(member));
+    }
+    fragment.append(memberGrid);
+  }
+
+  organizationChart.append(fragment);
+}
+
+async function loadDashboardData() {
+  if (!sb || !currentSession?.user || !currentProfile?.team_id) {
+    dashboardTasks = [];
+    statusBoard.replaceChildren();
+    organizationChart.replaceChildren();
+    return;
+  }
+
+  const [taskResult, memberResult] = await Promise.all([
+    sb
+      .from("tasks")
+      .select(`
+        id,
+        title,
+        description,
+        task_date,
+        status,
+        assignee_memo,
+        completed_at,
+        assignee_id,
+        assignee:profiles!tasks_assignee_id_fkey(display_name)
+      `)
+      .order("task_date", { ascending: true })
+      .order("created_at", { ascending: true }),
+    loadTeamMembers()
+  ]);
+
+  if (taskResult.error) {
+    dashboardTasks = [];
+    statusBoard.replaceChildren();
+    return;
+  }
+
+  // loadTeamMembers()는 실패 시 예외를 던지므로 정상 완료 때만 조직도를 그립니다.
+  dashboardTasks = taskResult.data || [];
+  renderDashboard();
+  renderOrganization();
+}
+
+async function refreshWorkspaceData() {
+  await Promise.all([loadTasks(), loadDashboardData()]);
+}
+
+function selectWorkspaceMode(mode) {
+  currentWorkspaceMode = mode;
+  const isDashboard = mode === "dashboard";
+  const isList = mode === "list";
+  const isOrganization = mode === "organization";
+
+  dashboardView.hidden = !isDashboard;
+  taskListView.hidden = !isList;
+  organizationView.hidden = !isOrganization;
+
+  dashboardViewButton.classList.toggle("is-active", isDashboard);
+  listViewButton.classList.toggle("is-active", isList);
+  organizationViewButton.classList.toggle("is-active", isOrganization);
+  dashboardViewButton.setAttribute("aria-selected", String(isDashboard));
+  listViewButton.setAttribute("aria-selected", String(isList));
+  organizationViewButton.setAttribute("aria-selected", String(isOrganization));
 }
 
 function fillAssigneeOptions(selectedUserId = "") {
@@ -921,7 +1150,7 @@ async function saveTask(event) {
 
     closeTaskEditor();
     showMessage(taskId ? "업무가 수정되었습니다." : "업무가 배정되었습니다.", "success");
-    await loadTasks();
+    await refreshWorkspaceData();
     if (currentProfile?.is_leader) {
       await loadNotifications();
     }
@@ -988,7 +1217,7 @@ async function saveTaskProgress(event) {
 
     closeTaskProgress();
     showMessage("업무 진행상황이 저장되었습니다.", "success");
-    await loadTasks();
+    await refreshWorkspaceData();
     if (currentProfile?.is_leader) {
       await loadNotifications();
     }
@@ -1148,7 +1377,8 @@ async function renderAuthState(session) {
 
     if (profile.team_id) {
       workspaceSummary.textContent = `${profile.teams?.name || "소속 팀"}의 업무를 확인합니다.`;
-      void loadTasks();
+      selectWorkspaceMode(currentWorkspaceMode);
+      void refreshWorkspaceData();
       if (profile.is_leader) {
         void loadNotifications();
       }
@@ -1310,7 +1540,11 @@ teamTasksButton.addEventListener("click", () => selectTaskView("team"));
 myTasksButton.addEventListener("click", () => selectTaskView("mine"));
 taskDateFilter.addEventListener("change", renderFilteredTasks);
 taskStatusFilter.addEventListener("change", renderFilteredTasks);
-refreshTasksButton.addEventListener("click", () => void loadTasks());
+refreshTasksButton.addEventListener("click", () => void refreshWorkspaceData());
+dashboardViewButton.addEventListener("click", () => selectWorkspaceMode("dashboard"));
+listViewButton.addEventListener("click", () => selectWorkspaceMode("list"));
+organizationViewButton.addEventListener("click", () => selectWorkspaceMode("organization"));
+dashboardGoToListButton.addEventListener("click", () => selectWorkspaceMode("list"));
 newTaskButton.addEventListener("click", () => void openTaskEditor());
 taskEditorForm.addEventListener("submit", saveTask);
 closeTaskEditorButton.addEventListener("click", closeTaskEditor);

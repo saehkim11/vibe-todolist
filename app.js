@@ -93,6 +93,9 @@ const commentForm = document.querySelector("#commentForm");
 const editingCommentId = document.querySelector("#editingCommentId");
 const commentInput = document.querySelector("#commentInput");
 const commentFormMessage = document.querySelector("#commentFormMessage");
+const attachmentList = document.querySelector("#attachmentList");
+const attachmentInput = document.querySelector("#attachmentInput");
+const attachmentMessage = document.querySelector("#attachmentMessage");
 const cancelCommentEditButton = document.querySelector("#cancelCommentEditButton");
 const saveCommentButton = document.querySelector("#saveCommentButton");
 const notificationButton = document.querySelector("#notificationButton");
@@ -118,6 +121,7 @@ let organizationZoom = 1;
 let teamMembers = [];
 let selectedTaskId = null;
 let loadedComments = [];
+let loadedAttachments = [];
 let commentRequestNumber = 0;
 let loadedNotifications = [];
 let notificationRequestNumber = 0;
@@ -244,6 +248,58 @@ function setCommentFormMessage(message = "", isError = false) {
 function setCommentListStatus(message = "", isError = false) {
   commentListStatus.textContent = message;
   commentListStatus.classList.toggle("is-error", isError);
+}
+
+function setAttachmentMessage(message = "", isError = false) {
+  attachmentMessage.textContent = message;
+  attachmentMessage.classList.toggle("is-error", isError);
+}
+
+async function loadAttachments(taskId) {
+  const { data, error } = await sb.from("task_attachments")
+    .select("id, user_id, storage_path, file_name, created_at, profiles(display_name)")
+    .eq("task_id", taskId).order("created_at", { ascending: false });
+  if (error) { setAttachmentMessage("첨부 기능을 준비 중입니다. SQL 설정을 확인해 주세요.", true); return; }
+  loadedAttachments = data || [];
+  attachmentList.replaceChildren();
+  for (const item of loadedAttachments) {
+    const { data: signed, error: signedError } = await sb.storage.from("task-images").createSignedUrl(item.storage_path, 3600);
+    if (signedError) continue;
+    const wrap = document.createElement("article"); wrap.className = "attachment-item";
+    const image = document.createElement("img"); image.src = signed.signedUrl; image.alt = item.file_name;
+    image.addEventListener("click", () => window.open(signed.signedUrl, "_blank", "noopener"));
+    const meta = document.createElement("small"); meta.textContent = `${item.profiles?.display_name || "작성자"} · ${item.file_name}`;
+    wrap.append(image, meta);
+    if (item.user_id === currentSession?.user?.id) {
+      const remove = document.createElement("button"); remove.type = "button"; remove.className = "attachment-remove"; remove.textContent = "삭제";
+      remove.addEventListener("click", () => void deleteAttachment(item)); wrap.append(remove);
+    }
+    attachmentList.append(wrap);
+  }
+}
+
+async function uploadAttachment() {
+  const file = attachmentInput.files?.[0];
+  if (!file || !selectedTaskId) return;
+  if (!['image/jpeg','image/png','image/webp'].includes(file.type) || file.size > 5242880) { setAttachmentMessage("JPG·PNG·WEBP, 5MB 이하 이미지만 첨부할 수 있습니다.", true); return; }
+  const extension = file.name.split('.').pop().toLowerCase();
+  const path = `${selectedTaskId}/${currentSession.user.id}/${crypto.randomUUID()}.${extension}`;
+  setAttachmentMessage("이미지를 올리는 중입니다.");
+  try {
+    const { data: record, error: recordError } = await sb.from("task_attachments").insert({ task_id: selectedTaskId, storage_path: path, file_name: file.name }).select("id").single();
+    if (recordError) throw recordError;
+    const { error: uploadError } = await sb.storage.from("task-images").upload(path, file, { contentType: file.type });
+    if (uploadError) { await sb.from("task_attachments").delete().eq("id", record.id); throw uploadError; }
+    attachmentInput.value = ""; setAttachmentMessage("이미지를 첨부했습니다."); await loadAttachments(selectedTaskId);
+  } catch (error) { setAttachmentMessage(`이미지를 첨부하지 못했습니다: ${error.message}`, true); }
+}
+
+async function deleteAttachment(item) {
+  if (!window.confirm("이 이미지를 삭제할까요?")) return;
+  const { error } = await sb.storage.from("task-images").remove([item.storage_path]);
+  if (error) { setAttachmentMessage(`이미지를 삭제하지 못했습니다: ${error.message}`, true); return; }
+  await sb.from("task_attachments").delete().eq("id", item.id);
+  await loadAttachments(selectedTaskId);
 }
 
 function setNotificationListStatus(message = "", isError = false) {
@@ -1053,7 +1109,11 @@ function closeTaskDetail() {
   commentRequestNumber += 1;
   selectedTaskId = null;
   loadedComments = [];
+  loadedAttachments = [];
   commentList.replaceChildren();
+  attachmentList.replaceChildren();
+  attachmentInput.value = "";
+  setAttachmentMessage();
   commentCount.textContent = "0개";
   resetCommentForm();
 
@@ -1178,6 +1238,7 @@ function openTaskDetail(task) {
     taskDetailDialog.showModal();
   }
   void loadComments(task.id);
+  void loadAttachments(task.id);
 }
 
 function updateDateFilter(tasks) {
@@ -1859,6 +1920,7 @@ closeTaskProgressButton.addEventListener("click", closeTaskProgress);
 cancelTaskProgressButton.addEventListener("click", closeTaskProgress);
 closeTaskDetailButton.addEventListener("click", closeTaskDetail);
 commentForm.addEventListener("submit", saveComment);
+attachmentInput.addEventListener("change", () => void uploadAttachment());
 cancelCommentEditButton.addEventListener("click", resetCommentForm);
 notificationButton.addEventListener("click", openNotificationDialog);
 closeNotificationButton.addEventListener("click", () => notificationDialog.close());

@@ -456,6 +456,13 @@
         </div>
 
         <p id="commentListStatus" class="task-list-status" role="status" aria-live="polite"></p>
+        <section class="attachment-section" aria-labelledby="attachmentHeading">
+          <div class="comment-heading"><h3 id="attachmentHeading">이미지 첨부</h3></div>
+          <div id="attachmentList" class="attachment-list"></div>
+          <label class="attachment-button" for="attachmentInput">이미지 추가</label>
+          <input id="attachmentInput" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+          <p id="attachmentMessage" class="account-message" role="status"></p>
+        </section>
         <div id="commentList" class="comment-list"></div>
 
         <form id="commentForm" class="comment-form">

@@ -123,9 +123,9 @@ button {
 }
 
 .account-panel.is-leader-account {
-  border-color: #d7b76d;
-  background: linear-gradient(145deg, #fffdf7 0%, #fff5d8 100%);
-  box-shadow: 0 12px 32px rgba(125, 91, 14, 0.13);
+  border: 2px solid #c99222;
+  background: linear-gradient(145deg, #fff8da 0%, #ffe9a9 100%);
+  box-shadow: 0 12px 30px rgba(125, 84, 0, 0.2);
 }
 
 .account-panel.is-leader-account .section-label {
@@ -133,8 +133,8 @@ button {
 }
 
 .account-panel.is-leader-account .profile-card > div {
-  border-color: #dfc98f;
-  background: rgba(255, 255, 255, 0.72);
+  border-color: #d5ae53;
+  background: rgba(255, 255, 255, 0.8);
 }
 
 .account-panel.is-leader-account #currentUserRole {
@@ -926,9 +926,10 @@ code {
 
 /* 로그인 후에는 상단 안내를 압축하고 업무 목록을 중심으로 표시합니다. */
 body.is-authenticated .page-shell {
-  grid-template-columns: minmax(0, 1fr) minmax(310px, 360px);
-  gap: 16px 20px;
-  padding-top: 22px;
+  grid-template-columns: minmax(0, 1fr) minmax(290px, 340px);
+  gap: 14px 18px;
+  width: min(1240px, calc(100% - 32px));
+  padding-top: 14px;
 }
 
 body.is-authenticated .intro-panel {
@@ -975,40 +976,44 @@ body.is-authenticated .feature-tile p {
 }
 
 body.is-authenticated .account-panel {
-  padding: 17px 18px;
-  border-radius: 13px;
+  align-self: start;
+  margin-top: -8px;
+  padding: 12px 14px;
+  border-radius: 12px;
 }
 
 body.is-authenticated .panel-heading .section-label {
-  margin-bottom: 3px;
-  font-size: 0.68rem;
+  margin-bottom: 1px;
+  font-size: 0.64rem;
 }
 
 body.is-authenticated .panel-heading h2 {
-  font-size: 1.18rem;
+  font-size: 1.05rem;
+  line-height: 1.25;
 }
 
 body.is-authenticated .panel-heading > p:last-child {
-  margin-top: 3px;
-  font-size: 0.78rem;
+  margin-top: 2px;
+  font-size: 0.7rem;
 }
 
 body.is-authenticated .profile-card {
-  gap: 8px;
-  margin-top: 11px;
+  gap: 6px;
+  margin-top: 7px;
 }
 
 body.is-authenticated .profile-card > div {
-  padding: 9px 11px;
-  border-radius: 8px;
+  gap: 1px;
+  padding: 5px 8px;
+  border-radius: 7px;
 }
 
 body.is-authenticated .profile-label {
-  font-size: 0.68rem;
+  font-size: 0.6rem;
 }
 
 body.is-authenticated .profile-card strong {
-  font-size: 0.84rem;
+  font-size: 0.75rem;
 }
 
 body.is-authenticated .account-panel .notice {
@@ -1018,16 +1023,16 @@ body.is-authenticated .account-panel .notice {
 }
 
 body.is-authenticated .secondary-button {
-  min-height: 36px;
-  margin-top: 10px;
-  padding: 6px 12px;
-  font-size: 0.8rem;
+  min-height: 30px;
+  margin-top: 7px;
+  padding: 3px 10px;
+  font-size: 0.72rem;
 }
 
 body.is-authenticated .account-message {
   min-height: 0;
-  margin-top: 7px;
-  font-size: 0.76rem;
+  margin-top: 4px;
+  font-size: 0.68rem;
 }
 
 body.is-authenticated .workspace-panel {
@@ -1051,6 +1056,7 @@ body.is-authenticated .workspace-panel {
 
   body.is-authenticated .account-panel {
     grid-row: 1;
+    margin-top: 0;
   }
 
   body.is-authenticated .intro-panel {

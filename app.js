@@ -1106,7 +1106,9 @@ async function renderAuthState(session) {
       return;
     }
 
-    currentUserName.textContent = profile.display_name;
+    currentUserName.textContent = profile.is_leader
+      ? `${profile.display_name} 팀장`
+      : profile.display_name;
     currentTeamName.textContent = profile.teams?.name || "팀 배정 대기";
     currentUserRole.textContent = profile.is_leader ? "팀장" : "팀원";
     accountPanel.classList.toggle("is-leader-account", profile.is_leader);

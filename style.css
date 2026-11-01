@@ -43,12 +43,12 @@ button {
 .page-shell {
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(380px, 0.95fr);
-  gap: 40px;
+  gap: 24px;
   width: min(1180px, calc(100% - 48px));
   min-height: 100vh;
   margin: 0 auto;
-  padding: 64px 0;
-  align-items: center;
+  padding: 36px 0 56px;
+  align-items: start;
 }
 
 .intro-panel,
@@ -120,6 +120,25 @@ button {
   border-radius: 18px;
   background: var(--surface);
   box-shadow: var(--shadow);
+}
+
+.account-panel.is-leader-account {
+  border-color: #d7b76d;
+  background: linear-gradient(145deg, #fffdf7 0%, #fff5d8 100%);
+  box-shadow: 0 12px 32px rgba(125, 91, 14, 0.13);
+}
+
+.account-panel.is-leader-account .section-label {
+  color: #80600c;
+}
+
+.account-panel.is-leader-account .profile-card > div {
+  border-color: #dfc98f;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.account-panel.is-leader-account #currentUserRole {
+  color: #765500;
 }
 
 .workspace-panel {
@@ -905,6 +924,116 @@ code {
   display: none !important;
 }
 
+/* 로그인 후에는 상단 안내를 압축하고 업무 목록을 중심으로 표시합니다. */
+body.is-authenticated .page-shell {
+  grid-template-columns: minmax(0, 1fr) minmax(310px, 360px);
+  gap: 16px 20px;
+  padding-top: 22px;
+}
+
+body.is-authenticated .intro-panel {
+  padding: 4px 0;
+}
+
+body.is-authenticated .intro-panel > h1 {
+  font-size: clamp(2.15rem, 5vw, 3.25rem);
+  line-height: 1;
+}
+
+body.is-authenticated .intro-copy {
+  max-width: none;
+  margin: 10px 0 15px;
+  font-size: 0.93rem;
+}
+
+body.is-authenticated .feature-list {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+body.is-authenticated .feature-tile {
+  min-width: 0;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  align-items: center;
+}
+
+body.is-authenticated .feature-number {
+  font-size: 0.7rem;
+}
+
+body.is-authenticated .feature-tile h2 {
+  overflow: hidden;
+  font-size: 0.8rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body.is-authenticated .feature-tile p {
+  display: none;
+}
+
+body.is-authenticated .account-panel {
+  padding: 17px 18px;
+  border-radius: 13px;
+}
+
+body.is-authenticated .panel-heading .section-label {
+  margin-bottom: 3px;
+  font-size: 0.68rem;
+}
+
+body.is-authenticated .panel-heading h2 {
+  font-size: 1.18rem;
+}
+
+body.is-authenticated .panel-heading > p:last-child {
+  margin-top: 3px;
+  font-size: 0.78rem;
+}
+
+body.is-authenticated .profile-card {
+  gap: 8px;
+  margin-top: 11px;
+}
+
+body.is-authenticated .profile-card > div {
+  padding: 9px 11px;
+  border-radius: 8px;
+}
+
+body.is-authenticated .profile-label {
+  font-size: 0.68rem;
+}
+
+body.is-authenticated .profile-card strong {
+  font-size: 0.84rem;
+}
+
+body.is-authenticated .account-panel .notice {
+  margin-top: 9px;
+  padding: 9px 10px;
+  font-size: 0.77rem;
+}
+
+body.is-authenticated .secondary-button {
+  min-height: 36px;
+  margin-top: 10px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+}
+
+body.is-authenticated .account-message {
+  min-height: 0;
+  margin-top: 7px;
+  font-size: 0.76rem;
+}
+
+body.is-authenticated .workspace-panel {
+  margin-top: 2px;
+}
+
 @media (max-width: 860px) {
   .page-shell {
     grid-template-columns: 1fr;
@@ -914,6 +1043,22 @@ code {
 
   .intro-panel > h1 {
     font-size: clamp(2.5rem, 12vw, 4.2rem);
+  }
+
+  body.is-authenticated .page-shell {
+    grid-template-columns: 1fr;
+  }
+
+  body.is-authenticated .account-panel {
+    grid-row: 1;
+  }
+
+  body.is-authenticated .intro-panel {
+    grid-row: 2;
+  }
+
+  body.is-authenticated .workspace-panel {
+    grid-row: 3;
   }
 
   .task-grid {
@@ -984,5 +1129,22 @@ code {
 
   .feature-tile {
     padding: 15px 16px;
+  }
+
+  body.is-authenticated .feature-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  body.is-authenticated .feature-tile {
+    justify-content: center;
+    padding: 9px 6px;
+  }
+
+  body.is-authenticated .feature-tile h2 {
+    font-size: 0.72rem;
+  }
+
+  body.is-authenticated .feature-number {
+    display: none;
   }
 }

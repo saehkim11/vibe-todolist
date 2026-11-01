@@ -1,5 +1,6 @@
 const loggedOutView = document.querySelector("#loggedOutView");
 const loggedInView = document.querySelector("#loggedInView");
+const accountPanel = document.querySelector(".account-panel");
 const loginTabButton = document.querySelector("#loginTabButton");
 const signupTabButton = document.querySelector("#signupTabButton");
 const loginPanel = document.querySelector("#loginPanel");
@@ -1066,8 +1067,10 @@ async function renderAuthState(session) {
 
   loggedOutView.hidden = Boolean(user);
   loggedInView.hidden = !user;
+  document.body.classList.toggle("is-authenticated", Boolean(user));
 
   if (!user) {
+    accountPanel.classList.remove("is-leader-account");
     currentProfile = null;
     workspaceView.hidden = true;
     clearTaskList();
@@ -1084,6 +1087,7 @@ async function renderAuthState(session) {
   currentTeamName.textContent = "확인 중";
   currentUserRole.textContent = "확인 중";
   teamPendingNotice.hidden = true;
+  accountPanel.classList.remove("is-leader-account");
 
   try {
     const profile = await loadCurrentProfile(user.id);
@@ -1105,6 +1109,7 @@ async function renderAuthState(session) {
     currentUserName.textContent = profile.display_name;
     currentTeamName.textContent = profile.teams?.name || "팀 배정 대기";
     currentUserRole.textContent = profile.is_leader ? "팀장" : "팀원";
+    accountPanel.classList.toggle("is-leader-account", profile.is_leader);
     teamPendingNotice.hidden = Boolean(profile.team_id);
     currentProfile = profile;
     workspaceView.hidden = !profile.team_id;
@@ -1129,6 +1134,7 @@ async function renderAuthState(session) {
     currentUserRole.textContent = "확인 필요";
     showMessage(`프로필을 불러오지 못했습니다: ${error.message}`, "error");
     currentProfile = null;
+    accountPanel.classList.remove("is-leader-account");
     workspaceView.hidden = true;
     clearTaskList();
   }

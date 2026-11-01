@@ -236,6 +236,7 @@
       <div class="workspace-mode-tabs" role="tablist" aria-label="업무 보기 선택">
         <button id="dashboardViewButton" class="workspace-mode-button is-active" type="button" role="tab" aria-selected="true">대시보드</button>
         <button id="listViewButton" class="workspace-mode-button" type="button" role="tab" aria-selected="false">업무 목록</button>
+        <button id="calendarViewButton" class="workspace-mode-button" type="button" role="tab" aria-selected="false">캘린더</button>
         <button id="organizationViewButton" class="workspace-mode-button" type="button" role="tab" aria-selected="false">조직도</button>
       </div>
 
@@ -260,6 +261,22 @@
           <button id="dashboardGoToListButton" class="text-action-button" type="button">전체 업무 보기</button>
         </div>
         <div id="statusBoard" class="status-board" aria-label="상태별 업무 보드"></div>
+      </section>
+
+      <section id="calendarView" class="calendar-view" aria-labelledby="calendarTitle" hidden>
+        <div class="calendar-heading">
+          <div>
+            <p class="section-label">SCHEDULE VIEW</p>
+            <h3 id="calendarTitle">업무 캘린더</h3>
+          </div>
+          <div class="calendar-controls" aria-label="캘린더 월 이동">
+            <button id="previousMonthButton" class="calendar-control-button" type="button" aria-label="이전 달">‹</button>
+            <strong id="calendarMonthLabel">-</strong>
+            <button id="nextMonthButton" class="calendar-control-button" type="button" aria-label="다음 달">›</button>
+          </div>
+        </div>
+        <p class="calendar-guide">날짜 또는 업무 카드를 누르면 해당 업무를 자세히 확인할 수 있습니다.</p>
+        <div id="calendarGrid" class="calendar-grid" aria-label="업무 캘린더"></div>
       </section>
 
       <section id="organizationView" class="organization-view" aria-labelledby="organizationTitle" hidden>

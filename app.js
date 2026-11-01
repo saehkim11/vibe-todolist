@@ -22,8 +22,10 @@ const workspaceView = document.querySelector("#workspaceView");
 const workspaceSummary = document.querySelector("#workspaceSummary");
 const dashboardViewButton = document.querySelector("#dashboardViewButton");
 const listViewButton = document.querySelector("#listViewButton");
+const calendarViewButton = document.querySelector("#calendarViewButton");
 const organizationViewButton = document.querySelector("#organizationViewButton");
 const dashboardView = document.querySelector("#dashboardView");
+const calendarView = document.querySelector("#calendarView");
 const organizationView = document.querySelector("#organizationView");
 const taskListView = document.querySelector("#taskListView");
 const dashboardMyCount = document.querySelector("#dashboardMyCount");
@@ -33,6 +35,10 @@ const dashboardTeamCount = document.querySelector("#dashboardTeamCount");
 const dashboardGoToListButton = document.querySelector("#dashboardGoToListButton");
 const statusBoard = document.querySelector("#statusBoard");
 const organizationChart = document.querySelector("#organizationChart");
+const calendarGrid = document.querySelector("#calendarGrid");
+const calendarMonthLabel = document.querySelector("#calendarMonthLabel");
+const previousMonthButton = document.querySelector("#previousMonthButton");
+const nextMonthButton = document.querySelector("#nextMonthButton");
 const teamTasksButton = document.querySelector("#teamTasksButton");
 const myTasksButton = document.querySelector("#myTasksButton");
 const taskDateFilter = document.querySelector("#taskDateFilter");
@@ -96,6 +102,7 @@ let currentTaskView = "team";
 let currentWorkspaceMode = "dashboard";
 let loadedTasks = [];
 let dashboardTasks = [];
+let currentCalendarDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 let teamMembers = [];
 let selectedTaskId = null;
 let loadedComments = [];
@@ -242,6 +249,7 @@ function clearTaskList() {
   teamMembers = [];
   dashboardTasks = [];
   statusBoard.replaceChildren();
+  calendarGrid.replaceChildren();
   organizationChart.replaceChildren();
 }
 
@@ -350,6 +358,103 @@ function renderDashboard() {
   statusBoard.replaceChildren(fragment);
 }
 
+function toDateKey(year, monthIndex, day) {
+  return `${year}-${String(monthIndex + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+async function openCalendarDate(dateKey) {
+  selectWorkspaceMode("list");
+  currentTaskView = "team";
+  teamTasksButton.classList.add("is-active");
+  myTasksButton.classList.remove("is-active");
+  teamTasksButton.setAttribute("aria-selected", "true");
+  myTasksButton.setAttribute("aria-selected", "false");
+  await loadTasks();
+  taskDateFilter.value = dateKey;
+  renderFilteredTasks();
+}
+
+function renderCalendar() {
+  const year = currentCalendarDate.getFullYear();
+  const monthIndex = currentCalendarDate.getMonth();
+  const monthStart = new Date(year, monthIndex, 1);
+  const firstWeekday = monthStart.getDay();
+  const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+  const today = new Date();
+  const todayKey = toDateKey(today.getFullYear(), today.getMonth(), today.getDate());
+
+  calendarMonthLabel.textContent = new Intl.DateTimeFormat("ko-KR", {
+    year: "numeric",
+    month: "long"
+  }).format(monthStart);
+
+  const fragment = document.createDocumentFragment();
+  for (const label of ["일", "월", "화", "수", "목", "금", "토"]) {
+    const weekday = document.createElement("div");
+    weekday.className = "calendar-weekday";
+    weekday.textContent = label;
+    fragment.append(weekday);
+  }
+
+  for (let index = 0; index < 42; index += 1) {
+    const day = index - firstWeekday + 1;
+    const cell = document.createElement("div");
+    cell.className = "calendar-day";
+
+    if (day < 1 || day > daysInMonth) {
+      cell.classList.add("is-outside-month");
+      fragment.append(cell);
+      continue;
+    }
+
+    const dateKey = toDateKey(year, monthIndex, day);
+    if (dateKey === todayKey) {
+      cell.classList.add("is-today");
+    }
+
+    const dateButton = document.createElement("button");
+    dateButton.type = "button";
+    dateButton.className = "calendar-date-button";
+    dateButton.textContent = String(day);
+    dateButton.setAttribute("aria-label", `${formatTaskDate(dateKey)} 업무 보기`);
+    dateButton.addEventListener("click", () => void openCalendarDate(dateKey));
+    cell.append(dateButton);
+
+    const dayTasks = dashboardTasks.filter((task) => task.task_date === dateKey);
+    for (const task of dayTasks.slice(0, 3)) {
+      const taskButton = document.createElement("button");
+      taskButton.type = "button";
+      taskButton.className = `calendar-task status-${task.status}`;
+      taskButton.textContent = `${task.assignee?.display_name || "담당자"} · ${task.title}`;
+      taskButton.title = task.title;
+      taskButton.addEventListener("click", () => void openTaskDetail(task));
+      cell.append(taskButton);
+    }
+
+    if (dayTasks.length > 3) {
+      const moreButton = document.createElement("button");
+      moreButton.type = "button";
+      moreButton.className = "calendar-more-button";
+      moreButton.textContent = `+${dayTasks.length - 3}개 더 보기`;
+      moreButton.addEventListener("click", () => void openCalendarDate(dateKey));
+      cell.append(moreButton);
+    }
+
+    fragment.append(cell);
+  }
+
+  calendarGrid.replaceChildren(fragment);
+}
+
+function moveCalendarMonth(monthOffset) {
+  currentCalendarDate = new Date(
+    currentCalendarDate.getFullYear(),
+    currentCalendarDate.getMonth() + monthOffset,
+    1
+  );
+  renderCalendar();
+}
+
 function createOrganizationMemberCard(member, isLeader = false) {
   const card = document.createElement("article");
   card.className = isLeader ? "organization-member is-leader" : "organization-member";
@@ -451,6 +556,7 @@ async function loadDashboardData() {
   // loadTeamMembers()는 실패 시 예외를 던지므로 정상 완료 때만 조직도를 그립니다.
   dashboardTasks = taskResult.data || [];
   renderDashboard();
+  renderCalendar();
   renderOrganization();
 }
 
@@ -462,17 +568,21 @@ function selectWorkspaceMode(mode) {
   currentWorkspaceMode = mode;
   const isDashboard = mode === "dashboard";
   const isList = mode === "list";
+  const isCalendar = mode === "calendar";
   const isOrganization = mode === "organization";
 
   dashboardView.hidden = !isDashboard;
   taskListView.hidden = !isList;
+  calendarView.hidden = !isCalendar;
   organizationView.hidden = !isOrganization;
 
   dashboardViewButton.classList.toggle("is-active", isDashboard);
   listViewButton.classList.toggle("is-active", isList);
+  calendarViewButton.classList.toggle("is-active", isCalendar);
   organizationViewButton.classList.toggle("is-active", isOrganization);
   dashboardViewButton.setAttribute("aria-selected", String(isDashboard));
   listViewButton.setAttribute("aria-selected", String(isList));
+  calendarViewButton.setAttribute("aria-selected", String(isCalendar));
   organizationViewButton.setAttribute("aria-selected", String(isOrganization));
 }
 
@@ -1543,8 +1653,11 @@ taskStatusFilter.addEventListener("change", renderFilteredTasks);
 refreshTasksButton.addEventListener("click", () => void refreshWorkspaceData());
 dashboardViewButton.addEventListener("click", () => selectWorkspaceMode("dashboard"));
 listViewButton.addEventListener("click", () => selectWorkspaceMode("list"));
+calendarViewButton.addEventListener("click", () => selectWorkspaceMode("calendar"));
 organizationViewButton.addEventListener("click", () => selectWorkspaceMode("organization"));
 dashboardGoToListButton.addEventListener("click", () => selectWorkspaceMode("list"));
+previousMonthButton.addEventListener("click", () => moveCalendarMonth(-1));
+nextMonthButton.addEventListener("click", () => moveCalendarMonth(1));
 newTaskButton.addEventListener("click", () => void openTaskEditor());
 taskEditorForm.addEventListener("submit", saveTask);
 closeTaskEditorButton.addEventListener("click", closeTaskEditor);

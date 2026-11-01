@@ -122,6 +122,7 @@ let teamMembers = [];
 let selectedTaskId = null;
 let loadedComments = [];
 let loadedAttachments = [];
+let attachedTaskIds = new Set();
 let commentRequestNumber = 0;
 let loadedNotifications = [];
 let notificationRequestNumber = 0;
@@ -278,6 +279,22 @@ async function loadAttachments(taskId) {
   }
 }
 
+async function loadAttachmentTaskIds() {
+  const { data, error } = await sb.from("task_attachments").select("task_id");
+  if (error) return;
+  attachedTaskIds = new Set((data || []).map((item) => String(item.task_id)));
+}
+
+function addAttachmentBadge(element, taskId) {
+  if (!attachedTaskIds.has(String(taskId))) return;
+  element.classList.add("has-attachment");
+  const badge = document.createElement("span");
+  badge.className = "attachment-badge";
+  badge.textContent = "▧";
+  badge.title = "이미지 첨부됨";
+  element.append(badge);
+}
+
 async function uploadAttachment() {
   const file = attachmentInput.files?.[0];
   if (!file || !selectedTaskId) return;
@@ -290,7 +307,7 @@ async function uploadAttachment() {
     if (recordError) throw recordError;
     const { error: uploadError } = await sb.storage.from("task-images").upload(path, file, { contentType: file.type });
     if (uploadError) { await sb.from("task_attachments").delete().eq("id", record.id); throw uploadError; }
-    attachmentInput.value = ""; setAttachmentMessage("이미지를 첨부했습니다."); await loadAttachments(selectedTaskId);
+    attachmentInput.value = ""; setAttachmentMessage("이미지를 첨부했습니다."); await refreshWorkspaceData(); await loadAttachments(selectedTaskId);
   } catch (error) { setAttachmentMessage(`이미지를 첨부하지 못했습니다: ${error.message}`, true); }
 }
 
@@ -299,6 +316,7 @@ async function deleteAttachment(item) {
   const { error } = await sb.storage.from("task-images").remove([item.storage_path]);
   if (error) { setAttachmentMessage(`이미지를 삭제하지 못했습니다: ${error.message}`, true); return; }
   await sb.from("task_attachments").delete().eq("id", item.id);
+  await refreshWorkspaceData();
   await loadAttachments(selectedTaskId);
 }
 
@@ -372,6 +390,7 @@ function createDashboardTaskButton(task) {
   meta.textContent = `${task.assignee?.display_name || "담당자"} · ${formatTaskDate(task.task_date)}`;
 
   button.append(title, meta);
+  addAttachmentBadge(button, task.id);
   return button;
 }
 
@@ -785,7 +804,8 @@ async function loadDashboardData() {
       .order("task_date", { ascending: true })
       .order("created_at", { ascending: true }),
     loadTeamMembers(),
-    loadOrganizationProfiles()
+    loadOrganizationProfiles(),
+    loadAttachmentTaskIds()
   ]);
 
   if (taskResult.error) {
@@ -799,6 +819,7 @@ async function loadDashboardData() {
   renderDashboard();
   renderCalendar();
   renderOrganization();
+  renderFilteredTasks();
 }
 
 async function refreshWorkspaceData() {
@@ -1265,6 +1286,7 @@ function updateDateFilter(tasks) {
 function createTaskCard(task) {
   const card = document.createElement("article");
   card.className = "task-card";
+  addAttachmentBadge(card, task.id);
 
   const header = document.createElement("div");
   header.className = "task-card-header";

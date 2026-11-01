@@ -204,6 +204,10 @@
           <p class="section-label">WORKSPACE</p>
           <h2 id="workspaceTitle">업무 목록</h2>
           <p id="workspaceSummary">팀 업무를 불러오는 중입니다.</p>
+          <div class="view-tabs workspace-view-tabs" role="tablist" aria-label="업무 범위 선택">
+            <button id="teamTasksButton" class="view-tab is-active" type="button" role="tab" aria-selected="true">팀 전체 업무</button>
+            <button id="myTasksButton" class="view-tab" type="button" role="tab" aria-selected="false">내 업무</button>
+          </div>
         </div>
 
         <div class="workspace-actions">
@@ -214,22 +218,11 @@
           <button id="newTaskButton" class="primary-button compact-button" type="button" hidden>
             새 업무
           </button>
-          <div class="view-tabs" role="tablist" aria-label="업무 화면 선택">
-            <button
-              id="teamTasksButton"
-              class="view-tab is-active"
-              type="button"
-              role="tab"
-              aria-selected="true"
-            >팀 전체 업무</button>
-            <button
-              id="myTasksButton"
-              class="view-tab"
-              type="button"
-              role="tab"
-              aria-selected="false"
-            >내 업무</button>
-          </div>
+          <section class="memo-preview" aria-labelledby="memoPreviewTitle">
+            <div><p class="section-label">GROUP MEMO</p><strong id="memoPreviewTitle">단체 메모</strong></div>
+            <p>선택한 팀원과 업무 관련 대화를 나눕니다.</p>
+            <button id="openMemoButton" class="text-action-button" type="button">메모 열기</button>
+          </section>
         </div>
       </div>
 
@@ -322,6 +315,7 @@
     </section>
   </main>
 
+  <dialog id="memoDialog" class="task-dialog" aria-labelledby="memoDialogTitle"><div class="dialog-heading"><div><p class="section-label">GROUP MEMO</p><h2 id="memoDialogTitle">단체 메모</h2></div><button id="closeMemoButton" class="icon-button" type="button">×</button></div><p class="task-list-status">참여자를 선택해 대화방을 만드는 기능을 다음 DB 단계에서 연결합니다.</p></dialog>
   <dialog id="organizationDetailDialog" class="task-dialog organization-detail-dialog" aria-labelledby="organizationDetailTitle">
     <div class="dialog-heading">
       <div>

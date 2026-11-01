@@ -106,6 +106,9 @@ const markAllNotificationsButton = document.querySelector("#markAllNotifications
 const notificationSummary = document.querySelector("#notificationSummary");
 const notificationListStatus = document.querySelector("#notificationListStatus");
 const notificationList = document.querySelector("#notificationList");
+const openMemoButton = document.querySelector("#openMemoButton");
+const memoDialog = document.querySelector("#memoDialog");
+const closeMemoButton = document.querySelector("#closeMemoButton");
 
 let authRenderNumber = 0;
 let taskRequestNumber = 0;
@@ -1947,6 +1950,8 @@ cancelCommentEditButton.addEventListener("click", resetCommentForm);
 notificationButton.addEventListener("click", openNotificationDialog);
 closeNotificationButton.addEventListener("click", () => notificationDialog.close());
 markAllNotificationsButton.addEventListener("click", () => void markAllNotificationsRead());
+openMemoButton.addEventListener("click", () => memoDialog.showModal());
+closeMemoButton.addEventListener("click", () => memoDialog.close());
 themeToggleButton.addEventListener("click", toggleTheme);
 
 applyTheme(document.documentElement.dataset.theme, false);

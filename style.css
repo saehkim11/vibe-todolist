@@ -542,6 +542,21 @@ button {
   font-size: 0.78rem;
 }
 
+.calendar-message {
+  min-height: 22px;
+  margin: -8px 0 8px;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+}
+
+.calendar-message.is-error {
+  color: var(--danger);
+}
+
+.calendar-message.is-success {
+  color: var(--success);
+}
+
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -580,6 +595,12 @@ button {
 
 .calendar-day.is-today {
   background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+}
+
+.calendar-day.is-drop-target {
+  outline: 2px dashed var(--accent);
+  outline-offset: -3px;
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface));
 }
 
 .calendar-date-button {
@@ -629,6 +650,15 @@ button {
 .calendar-task.status-completed {
   background: var(--status-completed-bg);
   color: var(--status-completed-text);
+}
+
+.calendar-task.is-draggable {
+  cursor: grab;
+}
+
+.calendar-task.is-dragging {
+  opacity: 0.45;
+  cursor: grabbing;
 }
 
 .calendar-more-button {

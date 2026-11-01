@@ -44,6 +44,8 @@ const organizationDetailTitle = document.querySelector("#organizationDetailTitle
 const organizationDetailSummary = document.querySelector("#organizationDetailSummary");
 const organizationTaskList = document.querySelector("#organizationTaskList");
 const calendarGrid = document.querySelector("#calendarGrid");
+const calendarGuide = document.querySelector("#calendarGuide");
+const calendarMessage = document.querySelector("#calendarMessage");
 const calendarMonthLabel = document.querySelector("#calendarMonthLabel");
 const previousMonthButton = document.querySelector("#previousMonthButton");
 const nextMonthButton = document.querySelector("#nextMonthButton");
@@ -384,6 +386,47 @@ function toDateKey(year, monthIndex, day) {
   return `${year}-${String(monthIndex + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
+function setCalendarMessage(message = "", isError = false) {
+  calendarMessage.textContent = message;
+  calendarMessage.classList.toggle("is-error", isError);
+  calendarMessage.classList.toggle("is-success", Boolean(message) && !isError);
+}
+
+async function moveTaskToCalendarDate(taskId, nextDate) {
+  if (!currentProfile?.is_leader) {
+    setCalendarMessage("일정 변경은 해당 팀장만 할 수 있습니다.", true);
+    return;
+  }
+
+  const task = dashboardTasks.find((item) => String(item.id) === String(taskId));
+  if (!task || task.task_date === nextDate) {
+    return;
+  }
+
+  setCalendarMessage("업무 날짜를 변경하는 중입니다.");
+
+  try {
+    const { data, error } = await sb
+      .from("tasks")
+      .update({ task_date: nextDate })
+      .eq("id", task.id)
+      .select("id")
+      .maybeSingle();
+
+    if (error) {
+      throw error;
+    }
+    if (!data) {
+      throw new Error("변경 권한이 없거나 업무를 찾을 수 없습니다.");
+    }
+
+    await refreshWorkspaceData();
+    setCalendarMessage(`${task.title} 업무를 ${formatTaskDate(nextDate)}로 옮겼습니다.`);
+  } catch (error) {
+    setCalendarMessage(`업무 날짜를 변경하지 못했습니다: ${error.message}`, true);
+  }
+}
+
 async function openCalendarDate(dateKey) {
   selectWorkspaceMode("list");
   currentTaskView = "team";
@@ -404,6 +447,11 @@ function renderCalendar() {
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
   const today = new Date();
   const todayKey = toDateKey(today.getFullYear(), today.getMonth(), today.getDate());
+  const canMoveTasks = Boolean(currentProfile?.is_leader);
+
+  calendarGuide.textContent = canMoveTasks
+    ? "업무 카드를 다른 날짜로 드래그하면 일정이 변경됩니다. 날짜나 카드를 누르면 상세 내용을 확인할 수 있습니다."
+    : "날짜 또는 업무 카드를 누르면 해당 업무를 자세히 확인할 수 있습니다.";
 
   calendarMonthLabel.textContent = new Intl.DateTimeFormat("ko-KR", {
     year: "numeric",
@@ -442,6 +490,20 @@ function renderCalendar() {
     dateButton.addEventListener("click", () => void openCalendarDate(dateKey));
     cell.append(dateButton);
 
+    if (canMoveTasks) {
+      cell.addEventListener("dragover", (event) => {
+        event.preventDefault();
+        cell.classList.add("is-drop-target");
+      });
+      cell.addEventListener("dragleave", () => cell.classList.remove("is-drop-target"));
+      cell.addEventListener("drop", (event) => {
+        event.preventDefault();
+        cell.classList.remove("is-drop-target");
+        const taskId = event.dataTransfer.getData("text/plain");
+        void moveTaskToCalendarDate(taskId, dateKey);
+      });
+    }
+
     const dayTasks = dashboardTasks.filter((task) => task.task_date === dateKey);
     for (const task of dayTasks.slice(0, 3)) {
       const taskButton = document.createElement("button");
@@ -449,6 +511,21 @@ function renderCalendar() {
       taskButton.className = `calendar-task status-${task.status}`;
       taskButton.textContent = `${task.assignee?.display_name || "담당자"} · ${task.title}`;
       taskButton.title = task.title;
+      if (canMoveTasks) {
+        taskButton.draggable = true;
+        taskButton.classList.add("is-draggable");
+        taskButton.addEventListener("dragstart", (event) => {
+          event.dataTransfer.effectAllowed = "move";
+          event.dataTransfer.setData("text/plain", String(task.id));
+          taskButton.classList.add("is-dragging");
+        });
+        taskButton.addEventListener("dragend", () => {
+          taskButton.classList.remove("is-dragging");
+          document.querySelectorAll(".calendar-day.is-drop-target").forEach((dayCell) => {
+            dayCell.classList.remove("is-drop-target");
+          });
+        });
+      }
       taskButton.addEventListener("click", () => void openTaskDetail(task));
       cell.append(taskButton);
     }

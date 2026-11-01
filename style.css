@@ -687,11 +687,35 @@ button {
   padding: 0 8px;
 }
 
+.organization-tree-node.is-team-group {
+  margin: 0 4px;
+  padding: 12px 10px 14px;
+  border: 1px solid var(--line-hover);
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--surface) 76%, transparent);
+}
+
+.organization-tree-node.is-team-group::after {
+  position: absolute;
+  top: 7px;
+  right: 10px;
+  color: var(--text-muted);
+  content: "TEAM";
+  font-size: 0.56rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
 .organization-tree-children {
   position: relative;
   gap: 8px;
   margin-top: 26px !important;
   padding-top: 26px !important;
+}
+
+.organization-tree-node.is-team-group > .organization-tree-children {
+  margin-top: 18px !important;
+  padding-top: 22px !important;
 }
 
 .organization-tree-children::before {

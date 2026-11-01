@@ -538,6 +538,9 @@ function openOrganizationMember(member) {
 function createOrganizationNode(member, childMap, visited = new Set()) {
   const node = document.createElement("li");
   node.className = "organization-tree-node";
+  if (member.is_leader) {
+    node.classList.add("is-team-group");
+  }
   if (visited.has(member.id)) {
     return node;
   }

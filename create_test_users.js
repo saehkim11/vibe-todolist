@@ -18,6 +18,8 @@ const envPath = path.join(projectFolder, ".env.test-users");
 const accountListPath = path.join(projectFolder, "test_accounts.local.md");
 
 const testUsers = [
+  { email: "ceo01@test.local", name: "윤서준", team: "경영진", role: "사장" },
+  { email: "vp01@test.local", name: "한지민", team: "경영진", role: "부사장" },
   { email: "sales01@test.local", name: "김서준", team: "세일즈팀", role: "팀장" },
   { email: "sales02@test.local", name: "이지우", team: "세일즈팀", role: "팀원" },
   { email: "sales03@test.local", name: "박도윤", team: "세일즈팀", role: "팀원" },

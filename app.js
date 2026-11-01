@@ -35,6 +35,14 @@ const dashboardTeamCount = document.querySelector("#dashboardTeamCount");
 const dashboardGoToListButton = document.querySelector("#dashboardGoToListButton");
 const statusBoard = document.querySelector("#statusBoard");
 const organizationChart = document.querySelector("#organizationChart");
+const organizationZoomOutButton = document.querySelector("#organizationZoomOutButton");
+const organizationZoomInButton = document.querySelector("#organizationZoomInButton");
+const organizationZoomLabel = document.querySelector("#organizationZoomLabel");
+const organizationDetailDialog = document.querySelector("#organizationDetailDialog");
+const closeOrganizationDetailButton = document.querySelector("#closeOrganizationDetailButton");
+const organizationDetailTitle = document.querySelector("#organizationDetailTitle");
+const organizationDetailSummary = document.querySelector("#organizationDetailSummary");
+const organizationTaskList = document.querySelector("#organizationTaskList");
 const calendarGrid = document.querySelector("#calendarGrid");
 const calendarMonthLabel = document.querySelector("#calendarMonthLabel");
 const previousMonthButton = document.querySelector("#previousMonthButton");
@@ -103,6 +111,8 @@ let currentWorkspaceMode = "dashboard";
 let loadedTasks = [];
 let dashboardTasks = [];
 let currentCalendarDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+let organizationProfiles = [];
+let organizationZoom = 1;
 let teamMembers = [];
 let selectedTaskId = null;
 let loadedComments = [];
@@ -174,12 +184,23 @@ function selectAccountTab(tabName) {
 async function loadCurrentProfile(userId) {
   const { data, error } = await sb
     .from("profiles")
-    .select("display_name, team_id, is_leader, teams(name)")
+    .select("display_name, team_id, is_leader, position_title, teams(name)")
     .eq("id", userId)
     .maybeSingle();
 
   if (error) {
-    throw error;
+    // 조직도 확장 SQL 실행 전에도 기존 로그인 기능은 유지합니다.
+    const fallback = await sb
+      .from("profiles")
+      .select("display_name, team_id, is_leader, teams(name)")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (fallback.error) {
+      throw error;
+    }
+
+    return fallback.data;
   }
 
   return data;
@@ -248,6 +269,7 @@ function clearTaskList() {
   notificationList.replaceChildren();
   teamMembers = [];
   dashboardTasks = [];
+  organizationProfiles = [];
   statusBoard.replaceChildren();
   calendarGrid.replaceChildren();
   organizationChart.replaceChildren();
@@ -455,80 +477,162 @@ function moveCalendarMonth(monthOffset) {
   renderCalendar();
 }
 
-function createOrganizationMemberCard(member, isLeader = false) {
-  const card = document.createElement("article");
-  card.className = isLeader ? "organization-member is-leader" : "organization-member";
+async function loadOrganizationProfiles() {
+  if (!sb || !currentSession?.user) {
+    organizationProfiles = [];
+    return;
+  }
+
+  const { data, error } = await sb
+    .from("profiles")
+    .select("id, display_name, team_id, is_leader, position_title, manager_id, teams(name)")
+    .order("display_name", { ascending: true });
+
+  if (error) {
+    // 조직도 SQL을 아직 실행하지 않은 경우에도 기존 팀 조직도는 유지합니다.
+    const fallback = await sb
+      .from("profiles")
+      .select("id, display_name, team_id, is_leader, teams(name)")
+      .eq("team_id", currentProfile?.team_id)
+      .order("display_name", { ascending: true });
+
+    if (fallback.error) {
+      throw error;
+    }
+
+    const leader = (fallback.data || []).find((profile) => profile.is_leader);
+    organizationProfiles = (fallback.data || []).map((profile) => ({
+      ...profile,
+      position_title: profile.is_leader ? "팀장" : "팀원",
+      manager_id: profile.is_leader ? null : leader?.id || null
+    }));
+    return;
+  }
+
+  organizationProfiles = data || [];
+}
+
+function openOrganizationMember(member) {
+  const memberTasks = dashboardTasks.filter((task) => task.assignee_id === member.id);
+  organizationDetailTitle.textContent = `${member.display_name} · ${member.position_title || (member.is_leader ? "팀장" : "팀원")}`;
+  organizationDetailSummary.textContent = memberTasks.length > 0
+    ? `담당 업무 ${memberTasks.length}개 · 진행 중 ${memberTasks.filter((task) => task.status === "in_progress").length}개 · 완료 ${memberTasks.filter((task) => task.status === "completed").length}개`
+    : "조회 가능한 담당 업무가 없습니다. 상급자 계정은 하위 조직의 업무를 볼 수 있습니다.";
+
+  organizationTaskList.replaceChildren();
+  for (const task of memberTasks) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "organization-task-button";
+    button.textContent = `${formatTaskDate(task.task_date)} · ${taskStatusLabels[task.status]} · ${task.title}`;
+    button.addEventListener("click", () => {
+      organizationDetailDialog.close();
+      openTaskDetail(task);
+    });
+    organizationTaskList.append(button);
+  }
+
+  organizationDetailDialog.showModal();
+}
+
+function createOrganizationNode(member, childMap, visited = new Set()) {
+  const node = document.createElement("li");
+  node.className = "organization-tree-node";
+  if (visited.has(member.id)) {
+    return node;
+  }
+
+  const nextVisited = new Set(visited);
+  nextVisited.add(member.id);
+
+  const card = document.createElement("button");
+  card.type = "button";
+  card.className = "organization-member";
   if (member.id === currentSession?.user?.id) {
     card.classList.add("is-current-user");
+  }
+  if (member.position_title === "사장" || member.position_title === "부사장") {
+    card.classList.add("is-executive");
   }
 
   const role = document.createElement("span");
   role.className = "organization-role";
-  role.textContent = isLeader ? "팀장" : "팀원";
-
+  role.textContent = member.position_title || (member.is_leader ? "팀장" : "팀원");
   const name = document.createElement("strong");
-  name.textContent = member.id === currentSession?.user?.id
-    ? `${member.display_name} (나)`
-    : member.display_name;
-
+  name.textContent = member.id === currentSession?.user?.id ? `${member.display_name} (나)` : member.display_name;
+  const team = document.createElement("small");
+  team.textContent = member.teams?.name || "경영진";
   const summary = document.createElement("p");
-  const total = taskCountForMember(member.id);
-  const progressing = taskCountForMember(member.id, "in_progress");
-  const completed = taskCountForMember(member.id, "completed");
-  summary.textContent = `업무 ${total}개 · 진행 ${progressing} · 완료 ${completed}`;
+  summary.textContent = `업무 ${taskCountForMember(member.id)} · 진행 ${taskCountForMember(member.id, "in_progress")}`;
+  card.append(role, name, team, summary);
+  card.addEventListener("click", () => openOrganizationMember(member));
+  node.append(card);
 
-  card.append(role, name, summary);
-  return card;
+  const children = childMap.get(member.id) || [];
+  if (children.length > 0) {
+    const childList = document.createElement("ul");
+    childList.className = "organization-tree-children";
+    for (const child of children) {
+      childList.append(createOrganizationNode(child, childMap, nextVisited));
+    }
+    node.append(childList);
+  }
+
+  return node;
 }
 
 function renderOrganization() {
   organizationChart.replaceChildren();
 
-  if (teamMembers.length === 0) {
+  if (organizationProfiles.length === 0) {
     const empty = document.createElement("p");
     empty.className = "organization-empty";
-    empty.textContent = "팀 정보를 불러오는 중입니다.";
+    empty.textContent = "조직도 정보를 불러오는 중입니다.";
     organizationChart.append(empty);
     return;
   }
 
-  const leader = teamMembers.find((member) => member.is_leader);
-  const members = teamMembers.filter((member) => !member.is_leader);
-  const fragment = document.createDocumentFragment();
-
-  if (leader) {
-    const leaderWrap = document.createElement("div");
-    leaderWrap.className = "organization-leader-wrap";
-    leaderWrap.append(createOrganizationMemberCard(leader, true));
-    fragment.append(leaderWrap);
-  }
-
-  if (members.length > 0) {
-    const connector = document.createElement("div");
-    connector.className = "organization-connector";
-    connector.setAttribute("aria-hidden", "true");
-    fragment.append(connector);
-
-    const memberGrid = document.createElement("div");
-    memberGrid.className = "organization-member-grid";
-    for (const member of members) {
-      memberGrid.append(createOrganizationMemberCard(member));
+  const profileIds = new Set(organizationProfiles.map((profile) => profile.id));
+  const childMap = new Map();
+  for (const profile of organizationProfiles) {
+    if (!profile.manager_id || !profileIds.has(profile.manager_id)) {
+      continue;
     }
-    fragment.append(memberGrid);
+    const children = childMap.get(profile.manager_id) || [];
+    children.push(profile);
+    childMap.set(profile.manager_id, children);
   }
 
-  organizationChart.append(fragment);
+  const roots = organizationProfiles.filter((profile) => !profile.manager_id || !profileIds.has(profile.manager_id));
+  const canvas = document.createElement("div");
+  canvas.className = "organization-zoom-canvas";
+  canvas.style.transform = `scale(${organizationZoom})`;
+  canvas.style.transformOrigin = "top center";
+
+  const tree = document.createElement("ul");
+  tree.className = "organization-tree";
+  for (const root of roots) {
+    tree.append(createOrganizationNode(root, childMap));
+  }
+  canvas.append(tree);
+  organizationChart.append(canvas);
+  organizationZoomLabel.textContent = `${Math.round(organizationZoom * 100)}%`;
+}
+
+function changeOrganizationZoom(offset) {
+  organizationZoom = Math.min(1.5, Math.max(0.6, Number((organizationZoom + offset).toFixed(1))));
+  renderOrganization();
 }
 
 async function loadDashboardData() {
-  if (!sb || !currentSession?.user || !currentProfile?.team_id) {
+  if (!sb || !currentSession?.user || !currentProfile) {
     dashboardTasks = [];
     statusBoard.replaceChildren();
     organizationChart.replaceChildren();
     return;
   }
 
-  const [taskResult, memberResult] = await Promise.all([
+  const [taskResult] = await Promise.all([
     sb
       .from("tasks")
       .select(`
@@ -544,7 +648,8 @@ async function loadDashboardData() {
       `)
       .order("task_date", { ascending: true })
       .order("created_at", { ascending: true }),
-    loadTeamMembers()
+    loadTeamMembers(),
+    loadOrganizationProfiles()
   ]);
 
   if (taskResult.error) {
@@ -1115,7 +1220,7 @@ function renderFilteredTasks() {
 }
 
 async function loadTasks() {
-  if (!sb || !currentSession?.user || !currentProfile?.team_id) {
+  if (!sb || !currentSession?.user || !currentProfile) {
     workspaceView.hidden = true;
     clearTaskList();
     return;
@@ -1473,20 +1578,24 @@ async function renderAuthState(session) {
       return;
     }
 
+    const isExecutive = ["사장", "부사장"].includes(profile.position_title);
+    const canUseWorkspace = Boolean(profile.team_id || isExecutive);
     currentUserName.textContent = profile.is_leader
       ? `${profile.display_name} 팀장`
       : profile.display_name;
-    currentTeamName.textContent = profile.teams?.name || "팀 배정 대기";
-    currentUserRole.textContent = profile.is_leader ? "팀장" : "팀원";
+    currentTeamName.textContent = profile.teams?.name || (isExecutive ? "경영진" : "팀 배정 대기");
+    currentUserRole.textContent = profile.position_title || (profile.is_leader ? "팀장" : "팀원");
     accountPanel.classList.toggle("is-leader-account", profile.is_leader);
-    teamPendingNotice.hidden = Boolean(profile.team_id);
+    teamPendingNotice.hidden = canUseWorkspace;
     currentProfile = profile;
-    workspaceView.hidden = !profile.team_id;
+    workspaceView.hidden = !canUseWorkspace;
     newTaskButton.hidden = !profile.team_id || !profile.is_leader;
     notificationButton.hidden = !profile.team_id || !profile.is_leader;
 
-    if (profile.team_id) {
-      workspaceSummary.textContent = `${profile.teams?.name || "소속 팀"}의 업무를 확인합니다.`;
+    if (canUseWorkspace) {
+      workspaceSummary.textContent = isExecutive
+        ? "하위 조직의 업무와 진행 현황을 확인합니다."
+        : `${profile.teams?.name || "소속 팀"}의 업무를 확인합니다.`;
       selectWorkspaceMode(currentWorkspaceMode);
       void refreshWorkspaceData();
       if (profile.is_leader) {
@@ -1658,6 +1767,9 @@ organizationViewButton.addEventListener("click", () => selectWorkspaceMode("orga
 dashboardGoToListButton.addEventListener("click", () => selectWorkspaceMode("list"));
 previousMonthButton.addEventListener("click", () => moveCalendarMonth(-1));
 nextMonthButton.addEventListener("click", () => moveCalendarMonth(1));
+organizationZoomOutButton.addEventListener("click", () => changeOrganizationZoom(-0.1));
+organizationZoomInButton.addEventListener("click", () => changeOrganizationZoom(0.1));
+closeOrganizationDetailButton.addEventListener("click", () => organizationDetailDialog.close());
 newTaskButton.addEventListener("click", () => void openTaskEditor());
 taskEditorForm.addEventListener("submit", saveTask);
 closeTaskEditorButton.addEventListener("click", closeTaskEditor);

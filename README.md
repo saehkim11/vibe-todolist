@@ -52,3 +52,12 @@ Supabase와 순수 HTML, CSS, JavaScript로 만든 팀 업무 관리 웹페이�
 ## 테스트 계정
 
 테스트 계정의 아이디와 비밀번호는 로컬에서 생성되는 `test_accounts.local.md`에서 확인합니다. 이 파일은 GitHub에서 제외됩니다.
+
+## 전사 조직도 추가 실행 순서
+
+1. `.env.test-users.example`을 `.env.test-users`로 복사하고, 기존처럼 Project URL과 Secret key를 입력합니다.
+2. `node create_test_users.js`를 실행합니다. 기존 10명은 건너뛰고, 사장·부사장 테스트 계정이 추가됩니다.
+3. Supabase SQL Editor에서 `organization_migration.sql`을 실행합니다.
+4. 이어서 `organization_seed.sql`을 실행합니다.
+
+사장과 부사장은 하위 조직 업무를 조회할 수 있지만, 업무 생성·수정·재배분 권한은 기존처럼 각 팀장에게만 있습니다.

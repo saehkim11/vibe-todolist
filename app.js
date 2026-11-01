@@ -1165,7 +1165,7 @@ async function handleLogin(event) {
     }
 
     loginForm.reset();
-    showMessage("로그인되었습니다.", "success");
+    showMessage();
   } catch (error) {
     showMessage(`로그인하지 못했습니다: ${error.message}`, "error");
   } finally {

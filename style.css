@@ -954,61 +954,81 @@ body.is-authenticated .feature-list {
 body.is-authenticated .account-panel {
   align-self: start;
   margin-top: -8px;
-  padding: 12px 14px;
+  padding: 9px 12px;
   border-radius: 12px;
+}
+
+body.is-authenticated #loggedInView {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 5px 7px;
+  align-items: stretch;
+}
+
+body.is-authenticated #loggedInView .panel-heading {
+  grid-column: 1 / -1;
 }
 
 body.is-authenticated .panel-heading .section-label {
   margin-bottom: 1px;
-  font-size: 0.64rem;
+  font-size: 0.6rem;
 }
 
 body.is-authenticated .panel-heading h2 {
-  font-size: 1.05rem;
-  line-height: 1.25;
+  font-size: 0.95rem;
+  line-height: 1.15;
 }
 
 body.is-authenticated .panel-heading > p:last-child {
-  margin-top: 2px;
-  font-size: 0.7rem;
+  margin-top: 1px;
+  font-size: 0.63rem;
 }
 
 body.is-authenticated .profile-card {
+  grid-column: 1;
   gap: 6px;
-  margin-top: 7px;
+  margin-top: 2px;
 }
 
 body.is-authenticated .profile-card > div {
   gap: 1px;
-  padding: 5px 8px;
+  padding: 3px 7px;
   border-radius: 7px;
 }
 
 body.is-authenticated .profile-label {
-  font-size: 0.6rem;
+  font-size: 0.54rem;
 }
 
 body.is-authenticated .profile-card strong {
-  font-size: 0.75rem;
+  font-size: 0.68rem;
 }
 
 body.is-authenticated .account-panel .notice {
+  grid-column: 1 / -1;
   margin-top: 9px;
   padding: 9px 10px;
   font-size: 0.77rem;
 }
 
 body.is-authenticated .secondary-button {
-  min-height: 30px;
-  margin-top: 7px;
-  padding: 3px 10px;
-  font-size: 0.72rem;
+  grid-column: 2;
+  width: auto;
+  min-width: 64px;
+  min-height: 0;
+  margin-top: 2px;
+  padding: 3px 8px;
+  font-size: 0.66rem;
 }
 
 body.is-authenticated .account-message {
   min-height: 0;
   margin-top: 4px;
   font-size: 0.68rem;
+}
+
+body.is-authenticated .account-message:empty {
+  display: none;
 }
 
 body.is-authenticated .workspace-panel {

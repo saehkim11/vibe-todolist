@@ -948,30 +948,6 @@ body.is-authenticated .intro-copy {
 }
 
 body.is-authenticated .feature-list {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-
-body.is-authenticated .feature-tile {
-  min-width: 0;
-  gap: 8px;
-  padding: 10px 12px;
-  border-radius: 9px;
-  align-items: center;
-}
-
-body.is-authenticated .feature-number {
-  font-size: 0.7rem;
-}
-
-body.is-authenticated .feature-tile h2 {
-  overflow: hidden;
-  font-size: 0.8rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-body.is-authenticated .feature-tile p {
   display: none;
 }
 
@@ -1036,7 +1012,7 @@ body.is-authenticated .account-message {
 }
 
 body.is-authenticated .workspace-panel {
-  margin-top: 2px;
+  margin-top: 0;
 }
 
 @media (max-width: 860px) {
@@ -1137,20 +1113,4 @@ body.is-authenticated .workspace-panel {
     padding: 15px 16px;
   }
 
-  body.is-authenticated .feature-list {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  body.is-authenticated .feature-tile {
-    justify-content: center;
-    padding: 9px 6px;
-  }
-
-  body.is-authenticated .feature-tile h2 {
-    font-size: 0.72rem;
-  }
-
-  body.is-authenticated .feature-number {
-    display: none;
-  }
 }

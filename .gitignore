@@ -1,0 +1,5 @@
+# Supabase 관리자 키가 들어가는 로컬 파일
+.env.test-users
+
+# 자동 생성되는 테스트 로그인 정보
+test_accounts.local.md

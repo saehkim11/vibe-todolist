@@ -1553,6 +1553,7 @@ button:disabled {
   gap: 12px;
   margin-top: 28px;
 }
+.account-actions{display:flex;gap:6px;margin-top:8px}.account-actions .notification-button,.account-actions .compact-button,.account-actions .secondary-button{min-height:30px;padding:4px 8px;font-size:.72rem}
 
 .profile-card > div {
   display: grid;

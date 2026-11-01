@@ -189,7 +189,7 @@
           관리자가 팀을 배정할 때까지 기다려 주세요.
         </div>
 
-        <button id="logoutButton" class="secondary-button" type="button">로그아웃</button>
+        <div class="account-actions"><button id="notificationButton" class="notification-button" type="button" hidden>알림<span id="notificationBadge" class="notification-badge" hidden>0</span></button><button id="newTaskButton" class="primary-button compact-button" type="button" hidden>새 업무</button><button id="logoutButton" class="secondary-button" type="button">로그아웃</button></div>
       </div>
 
       <p id="accountMessage" class="account-message" role="status" aria-live="polite"></p>
@@ -204,7 +204,6 @@
           <p class="section-label">WORKSPACE</p>
           <h2 id="workspaceTitle">업무 목록</h2>
           <p id="workspaceSummary">팀 업무를 불러오는 중입니다.</p>
-          <div class="workspace-task-actions"><button id="notificationButton" class="notification-button" type="button" hidden>알림<span id="notificationBadge" class="notification-badge" hidden>0</span></button><button id="newTaskButton" class="primary-button compact-button" type="button" hidden>새 업무</button></div>
         </div>
 
         <div class="workspace-actions">
@@ -296,8 +295,7 @@
               <option value="completed">작업 완료</option>
             </select>
           </div>
-          <button id="refreshTasksButton" class="toolbar-button" type="button">새로고침</button>
-          <div class="view-tabs toolbar-view-tabs" role="tablist" aria-label="업무 범위 선택"><button id="teamTasksButton" class="view-tab is-active" type="button" role="tab" aria-selected="true">팀 전체 업무</button><button id="myTasksButton" class="view-tab" type="button" role="tab" aria-selected="false">내 업무</button></div>
+          <div class="filter-group"><label for="taskScopeFilter">업무 범위</label><select id="taskScopeFilter"><option value="team">팀 전체 업무</option><option value="mine">내 업무</option></select></div><button id="refreshTasksButton" hidden type="button"></button><div hidden><button id="teamTasksButton" type="button"></button><button id="myTasksButton" type="button"></button></div>
         </div>
 
         <p id="taskListStatus" class="task-list-status" role="status" aria-live="polite"></p>
